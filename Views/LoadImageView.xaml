@@ -5,8 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ImageEncryptTCP.Views"
         mc:Ignorable="d"
-        Title="LoadImageView" Height="450" Width="800">
+        Title="LoadImageView" Height="450" Width="800" Background="{DynamicResource Background}" Foreground="{DynamicResource PrimaryColor}" WindowStartupLocation="CenterScreen" >
     <Grid>
-        
+        <Button Content="Cargar imagen" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Style="{StaticResource ButtonStyleApp}" Height="26" Width="105" Command="{Binding LoadImageCommand}"/>
+        <Label HorizontalAlignment="Left" Margin="130,10,0,0" VerticalAlignment="Top" Foreground="{DynamicResource PrimaryColor}" Content="{Binding Filepath, UpdateSourceTrigger=PropertyChanged}"/>
+
     </Grid>
 </Window>

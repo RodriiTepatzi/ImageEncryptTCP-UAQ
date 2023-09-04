@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ImageEncryptTCP.ViewModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,7 @@ namespace ImageEncryptTCP.Views
         public ConnectView()
         {
             InitializeComponent();
+            DataContext = new ConnectViewModel();
         }
     }
 }

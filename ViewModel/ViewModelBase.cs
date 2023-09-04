@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SocketClient.ViewModel
+namespace ImageEncryptTCP.ViewModel
 {
     public abstract class ViewModelBase : INotifyPropertyChanged
     {

@@ -21,9 +21,9 @@ using System.Windows.Navigation;
 using ImageEncryptTCP.Views;
 using ImageEncryptTCP.Events;
 
-namespace SocketClient.ViewModel
+namespace ImageEncryptTCP.ViewModel
 {
-    public class LoginViewModel : ViewModelBase
+    public class ConnectViewModel : ViewModelBase
     {
         private string _username = "";
         private string _ipAddress = "127.0.0.1";
@@ -125,7 +125,7 @@ namespace SocketClient.ViewModel
         }
 
 
-        public LoginViewModel()
+        public ConnectViewModel()
         {
             LoginCommand = new ViewModelCommand(ExecuteLoginCommand);
         }

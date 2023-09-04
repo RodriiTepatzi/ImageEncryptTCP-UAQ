@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace SocketClient.ViewModel
+namespace ImageEncryptTCP.ViewModel
 {
     public class ViewModelCommand : ICommand
     {
