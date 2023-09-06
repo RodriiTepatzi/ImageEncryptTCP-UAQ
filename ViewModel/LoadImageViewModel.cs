@@ -38,13 +38,11 @@ namespace ImageEncryptTCP.ViewModel
 
         private void LoadImage(object obj)
         {
-
             Microsoft.Win32.OpenFileDialog openFileDlg = new Microsoft.Win32.OpenFileDialog();
+			openFileDlg.Filter = "Archios de imagen (*.BMP;*.JPG;*.GIF)|*.BMP;*.JPG;*.GIF";
 
-            // Launch OpenFileDialog by calling ShowDialog method
-            Nullable<bool> result = openFileDlg.ShowDialog();
-            // Get the selected file name and display in a TextBox.
-            // Load content of file in a TextBlock
+			Nullable<bool> result = openFileDlg.ShowDialog();            
+
             if (result == true)
             {
                 Filepath = openFileDlg.FileName;
