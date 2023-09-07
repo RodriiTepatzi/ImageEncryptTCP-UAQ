@@ -20,11 +20,14 @@ using System.Collections.ObjectModel;
 using System.Windows.Navigation;
 using ImageEncryptTCP.Views;
 using ImageEncryptTCP.Events;
+using ImageEncryptTCP.Manager;
 
 namespace ImageEncryptTCP.ViewModel
 {
     public class ConnectViewModel : ViewModelBase
     {
+        private ConnectionManager connectionManager;
+
         private string _username = "";
         private string _ipAddress = "127.0.0.1";
         private string _port = "8000";
@@ -127,12 +130,16 @@ namespace ImageEncryptTCP.ViewModel
 
         public ConnectViewModel()
         {
-            LoginCommand = new ViewModelCommand(ExecuteLoginCommand);
+			LoginCommand = new ViewModelCommand(ExecuteLoginCommand);
+
+			connectionManager = ConnectionManager.Instance;
+            connectionManager.ConnectionChanged += ConnectionChanged;
+            connectionManager.ConnectionTimedOut += ConnectionTimedOut;
         }
 
         private void ExecuteLoginCommand(object obj)
         {
-            if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Port) || string.IsNullOrEmpty(IPAddress))
+            if (string.IsNullOrEmpty(Port) || string.IsNullOrEmpty(IPAddress))
             {
                 _errorMessage = "Hay campos vacios.";
                 OnPropertyChanged(nameof(ErrorMessage));
@@ -142,10 +149,9 @@ namespace ImageEncryptTCP.ViewModel
                 _errorMessage = "";
                 OnPropertyChanged(nameof(ErrorMessage));
 
-                // Create the connection and with an event we listen for any change on IsConnected so we update either the UI
-                // or we do something else.
-
-
+                ConnectionManager.Instance.Port = Port;
+                ConnectionManager.Instance.ToIPAddress = IPAddress;
+                ConnectionManager.Instance.StartClient();
             }
         }
 

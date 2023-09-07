@@ -8,11 +8,6 @@ namespace Servidor
 {
     class Program
     {
-        static void Main(string[] args)
-        {
-            StartServer();
-
-        }
 
         static void StartServer()
         {

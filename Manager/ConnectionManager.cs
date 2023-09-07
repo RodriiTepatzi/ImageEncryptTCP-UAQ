@@ -6,76 +6,52 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using ImageEncryptTCP.Events;
 
 namespace ImageEncryptTCP.Manager
 {
-	public class ConnectionManager
+    public class ConnectionManager
 	{
 		private static ConnectionManager _instance = new ConnectionManager();
 		public static ConnectionManager Instance { get { return _instance; } }
 		public string? ToIPAddress { get; set; }
 		public string? Port { get; set; }
 		public string? ImagePath { get; set; }
+		public string? EncryptKey { get; set; }
+		public bool IsActive { get; set; }
+
+		public event EventHandler<ConnectionChangedEventArgs>? ConnectionChanged;
+		public event EventHandler<ConnectionTimedOutEventArgs>? ConnectionTimedOut;
 
 		private ConnectionManager() 
 		{
-
+			IsActive = true;
 		}
 
-
-		static async void StartClient()
+		public async void StartClient()
 		{
 			try
 			{
-				//Creacion del socket
 				if(Instance.ToIPAddress == null)
 				{
-					throw new Exception();
+					throw new Exception("An IP Address is needed.");
 				}
 
                 if(Instance.Port == null)
                 {
-					throw new Exception();
+					throw new Exception("A port is needed.");
                 }
-
-				if (Instance.ImagePath == null)
-				{
-					throw new Exception();
-				}
 
 				Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 				IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(Instance.ToIPAddress), int.Parse(Instance.Port));
 
-				//Se conecta el cliente al socket
 				Console.WriteLine("Conectando al servidor...");
 				await client.ConnectAsync(remoteEP);
 				Console.WriteLine("Conectado al servidor {0}", remoteEP);
 
-				while (true)
+				while (Instance.IsActive)
 				{
-					//Se convierte la imagen en bytes
-					byte[] img = File.ReadAllBytes(Instance.ImagePath);
-					//Ingresa la llave
-					Console.WriteLine("Ingresa la llave: ");
-					String key = Console.ReadLine();
-					//Se convierte la llave en bytes
-					byte[] keyb = Encoding.ASCII.GetBytes(key);
-
-					var encryptedImg = EncryptionManager.EncryptImage(Instance.ImagePath);
-					List<char> imgb = encryptedImg.Select(i => (char)i).ToList();
-					byte[] imgEb = Encoding.ASCII.GetBytes(imgb.ToArray());
-
-					//Se convinan los bytes para poder mandarlos como uno solo
-					byte[] combinedData = new byte[sizeof(int) + imgEb.Length + keyb.Length];
-					BitConverter.GetBytes(imgEb.Length).CopyTo(combinedData, 0);
-					imgEb.CopyTo(combinedData, sizeof(int));
-					keyb.CopyTo(combinedData, sizeof(int) + imgEb.Length);
-
-					//Se envian los bytes combinados
-					client.Send(combinedData);
-
-					Console.WriteLine("Datos enviados");
-					break;
+					Instance.SendData(client);
 				}
 
 				client.Shutdown(SocketShutdown.Both);
@@ -87,7 +63,41 @@ namespace ImageEncryptTCP.Manager
 			}
 		}
 
+		private void SendData(Socket client)
+		{
+			if (!string.IsNullOrEmpty(Instance.ImagePath))
+			{
+				byte[] img = File.ReadAllBytes(Instance.ImagePath);
+				Console.WriteLine("Ingresa la llave: ");
+				String key = Console.ReadLine();
+				byte[] keyb = Encoding.ASCII.GetBytes(key!);
 
+				var encryptedImg = EncryptionManager.EncryptImage(Instance.ImagePath);
+				List<char> imgb = encryptedImg.Select(i => (char)i).ToList();
+				byte[] imgEb = Encoding.ASCII.GetBytes(imgb.ToArray());
 
+				byte[] combinedData = new byte[sizeof(int) + imgEb.Length + keyb.Length];
+				BitConverter.GetBytes(imgEb.Length).CopyTo(combinedData, 0);
+				imgEb.CopyTo(combinedData, sizeof(int));
+				keyb.CopyTo(combinedData, sizeof(int) + imgEb.Length);
+				client.Send(combinedData);
+
+				Console.WriteLine("Datos enviados");
+				IsActive = false;
+			}
+		}
+
+		private void OnConnectionChanged(ConnectionChangedEventArgs e)
+		{
+			ConnectionChanged?.Invoke(this, e);
+		}
+
+		private void OnTimedOutChanged(ConnectionTimedOutEventArgs e)
+		{
+			ConnectionTimedOut?.Invoke(this, e);
+		}
+
+		private void HandleConnectionStatusChange(bool isConnected) => OnConnectionChanged(new ConnectionChangedEventArgs(isConnected));
+		private void HandleTimedOutStatusChange(bool isTimedOut) => OnTimedOutChanged(new ConnectionTimedOutEventArgs(isTimedOut));
 	}
 }

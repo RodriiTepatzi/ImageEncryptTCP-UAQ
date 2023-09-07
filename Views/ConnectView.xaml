@@ -5,17 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ImageEncryptTCP.Views"
         mc:Ignorable="d"
-        Title="LoginView" Height="600" Width="300" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Background="#FF292929">
-    
+        Title="LoginView" Height="292" Width="300" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Background="#FF292929">
+
     <Grid>
-        <Label Content="Iniciar sesión" HorizontalAlignment="Center" Margin="0,88,0,0" VerticalAlignment="Top" Foreground="#FF45A422" FontSize="18"/>
-        <Label Content="Usuario" HorizontalAlignment="Left" Margin="35,136,0,0" VerticalAlignment="Top" Foreground="{DynamicResource PrimaryColor}"/>
-        <TextBox Style="{DynamicResource TextBoxStyleApp}" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" x:Name="usernameTextBox" Margin="0,167,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Center" Width="230" Height="30" FontSize="14" VerticalContentAlignment="Center" Background="#FF454545" BorderBrush="{x:Null}" Foreground="#FF45A422" SelectionBrush="#FF45A422" BorderThickness="0,0,0,0" MaxLength="15"/>
-        <Label Content="IP" HorizontalAlignment="Left" Margin="35,202,0,0" VerticalAlignment="Top" Foreground="{DynamicResource PrimaryColor}"/>
-        <TextBox Style="{DynamicResource TextBoxStyleApp}" Text="{Binding IPAddress, UpdateSourceTrigger=PropertyChanged}" x:Name="ipTextBox" Margin="0,233,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Center" Width="230" Height="30" FontSize="14" VerticalContentAlignment="Center" Background="#FF454545" BorderBrush="{x:Null}" Foreground="#FF45A422" SelectionBrush="#FF45A422" BorderThickness="0,0,0,0" MaxLength="15"/>
-        <Label Content="Puerto" HorizontalAlignment="Left" Margin="35,277,0,0" VerticalAlignment="Top" Foreground="{DynamicResource PrimaryColor}"/>
-        <TextBox Style="{DynamicResource TextBoxStyleApp}" Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" x:Name="portTextBox" Margin="0,308,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Center" Width="230" Height="30" FontSize="14" VerticalContentAlignment="Center" Background="#FF454545" BorderBrush="{x:Null}" Foreground="#FF45A422" SelectionBrush="#FF45A422" BorderThickness="0,0,0,0" MaxLength="15"/>
+        <Label Content="IP" HorizontalAlignment="Left" Margin="35,34,0,0" VerticalAlignment="Top" Foreground="{DynamicResource PrimaryColor}"/>
+        <TextBox Style="{DynamicResource TextBoxStyleApp}" Text="{Binding IPAddress, UpdateSourceTrigger=PropertyChanged}" x:Name="ipTextBox" Margin="0,65,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Center" Width="230" Height="30" FontSize="14" VerticalContentAlignment="Center" Background="#FF454545" BorderBrush="{x:Null}" Foreground="#FF45A422" SelectionBrush="#FF45A422" BorderThickness="0,0,0,0" MaxLength="15"/>
+        <Label Content="Puerto" HorizontalAlignment="Left" Margin="35,109,0,0" VerticalAlignment="Top" Foreground="{DynamicResource PrimaryColor}"/>
+        <TextBox Style="{DynamicResource TextBoxStyleApp}" Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" x:Name="portTextBox" Margin="0,140,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Center" Width="230" Height="30" FontSize="14" VerticalContentAlignment="Center" Background="#FF454545" BorderBrush="{x:Null}" Foreground="#FF45A422" SelectionBrush="#FF45A422" BorderThickness="0,0,0,0" MaxLength="15"/>
         <Label Content="{Binding ErrorMessage, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" Margin="0,406,0,0" VerticalAlignment="Top" Foreground="#FFAB0F0F"/>
-        <Button Style="{DynamicResource ButtonStyleApp}" Content="Conectate" HorizontalAlignment="Center" Margin="0,361,0,0" VerticalAlignment="Top" Width="230" Height="40" Background="#FF046C2C" BorderBrush="{x:Null}" Foreground="#FFDADADA" FontWeight="Bold" FontSize="14" Padding="0,0,0,0" BorderThickness="0,0,0,0" IsEnabled="True" Command="{Binding LoginCommand}"/>
+        <Button Style="{DynamicResource ButtonStyleApp}" Content="Conectate" HorizontalAlignment="Center" Margin="0,193,0,0" VerticalAlignment="Top" Width="230" Height="40" Background="#FF046C2C" BorderBrush="{x:Null}" Foreground="#FFDADADA" FontWeight="Bold" FontSize="14" Padding="0,0,0,0" BorderThickness="0,0,0,0" IsEnabled="True" Command="{Binding LoginCommand}"/>
     </Grid>
 </Window>

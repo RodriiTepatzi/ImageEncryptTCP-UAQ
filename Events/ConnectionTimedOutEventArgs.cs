@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ImageEncryptTCP.Events
 {
-    public class ConnectionTimedOutEventArgs
+    public class ConnectionTimedOutEventArgs : EventArgs
     {
         public bool IsTimedOut { get; }
 
