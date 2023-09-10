@@ -38,6 +38,7 @@ namespace ImageEncryptTCP.ViewModel
         {
             return _canExecuteAction == null ? true : _canExecuteAction(parameter!);
         }
+
         public void Execute(object? parameter)
         {
             _executeAction!(parameter!);

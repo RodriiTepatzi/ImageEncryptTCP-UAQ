@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using ImageEncryptTCP.Events;
+using System.Threading;
 
 namespace ImageEncryptTCP.Manager
 {
@@ -23,39 +24,62 @@ namespace ImageEncryptTCP.Manager
 		public event EventHandler<ConnectionChangedEventArgs>? ConnectionChanged;
 		public event EventHandler<ConnectionTimedOutEventArgs>? ConnectionTimedOut;
 
+		private CancellationTokenSource cancellationTokenSource;
+
 		private ConnectionManager() 
 		{
 			IsActive = true;
 		}
 
-		public async void StartClient()
+		public void StartClient()
+		{
+			if (cancellationTokenSource != null && !cancellationTokenSource.IsCancellationRequested)
+			{
+				Console.WriteLine("Client is already running.");
+				HandleConnectionStatusChange(true);
+				HandleTimedOutStatusChange(true);
+				
+				return;
+			}
+
+			cancellationTokenSource = new CancellationTokenSource();
+			Task.Run(() => StartClientAsync(cancellationTokenSource.Token));
+		}
+
+		public void StopClient()
+		{
+			cancellationTokenSource?.Cancel();
+		}
+
+		private async Task StartClientAsync(CancellationToken cancellationToken)
 		{
 			try
 			{
-				if(Instance.ToIPAddress == null)
+				if (Instance.ToIPAddress == null)
 				{
 					throw new Exception("An IP Address is needed.");
 				}
 
-                if(Instance.Port == null)
-                {
-					throw new Exception("A port is needed.");
-                }
-
-				Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-				IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(Instance.ToIPAddress), int.Parse(Instance.Port));
-
-				Console.WriteLine("Conectando al servidor...");
-				await client.ConnectAsync(remoteEP);
-				Console.WriteLine("Conectado al servidor {0}", remoteEP);
-
-				while (Instance.IsActive)
+				if (Instance.Port == null)
 				{
-					Instance.SendData(client);
+					throw new Exception("A port is needed.");
 				}
 
-				client.Shutdown(SocketShutdown.Both);
-				client.Close();
+				using (Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+				{
+					IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(Instance.ToIPAddress), int.Parse(Instance.Port));
+
+					Console.WriteLine("Conectando al servidor...");
+					await client.ConnectAsync(remoteEP);
+					Console.WriteLine("Conectado al servidor {0}", remoteEP);
+
+					while (!cancellationToken.IsCancellationRequested)
+					{
+						Instance.SendData(client);
+					}
+
+					client.Shutdown(SocketShutdown.Both);
+				}
 			}
 			catch (Exception e)
 			{
@@ -68,9 +92,7 @@ namespace ImageEncryptTCP.Manager
 			if (!string.IsNullOrEmpty(Instance.ImagePath))
 			{
 				byte[] img = File.ReadAllBytes(Instance.ImagePath);
-				Console.WriteLine("Ingresa la llave: ");
-				String key = Console.ReadLine();
-				byte[] keyb = Encoding.ASCII.GetBytes(key!);
+				byte[] keyb = Encoding.ASCII.GetBytes(Instance.EncryptKey!);
 
 				var encryptedImg = EncryptionManager.EncryptImage(Instance.ImagePath);
 				List<char> imgb = encryptedImg.Select(i => (char)i).ToList();

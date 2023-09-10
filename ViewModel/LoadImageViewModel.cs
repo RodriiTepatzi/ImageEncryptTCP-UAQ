@@ -1,4 +1,5 @@
-﻿using ImageEncryptTCP.ViewModel;
+﻿using ImageEncryptTCP.Manager;
+using ImageEncryptTCP.ViewModel;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,10 @@ namespace ImageEncryptTCP.ViewModel
     public class LoadImageViewModel : ViewModelBase
     {
         private string? _filePath;
+        private string? _key;
+
         public ICommand LoadImageCommand { get; }
+        public ICommand SendData { get; }
 
         public string ? Filepath
         {
@@ -30,10 +34,21 @@ namespace ImageEncryptTCP.ViewModel
             }
         }
 
+        public string? Key
+        {
+            get { return _key; }
+            set
+            {
+                _key = value;
+                OnPropertyChanged(nameof(Key));
+            }
+        }
+
         public LoadImageViewModel()
         {
             _filePath = "No ha seleccionado ningún archivo.";
-            LoadImageCommand = new ViewModelCommand(LoadImage);    
+            LoadImageCommand = new ViewModelCommand(LoadImage);
+            SendData = new ViewModelCommand(SendImage);
         }
 
         private void LoadImage(object obj)
@@ -48,5 +63,14 @@ namespace ImageEncryptTCP.ViewModel
                 Filepath = openFileDlg.FileName;
             }
         }
+
+        private void SendImage(object obj)
+        {
+            if (!string.IsNullOrEmpty(Key) && !string.IsNullOrEmpty(Filepath))
+            {
+				ConnectionManager.Instance.ImagePath = Filepath;
+                ConnectionManager.Instance.EncryptKey = Key;
+			}
+		}
     }
 }
