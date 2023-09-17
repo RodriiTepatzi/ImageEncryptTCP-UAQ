@@ -44,7 +44,9 @@ namespace ImageEncryptTCP.Manager
 
             cancellationTokenSource = new CancellationTokenSource();
             Task.Run(() => StartClientAsync(cancellationTokenSource.Token));
-        }
+			HandleConnectionStatusChange(true);
+			HandleTimedOutStatusChange(true);
+		}
 
         public void StopClient()
         {
@@ -76,10 +78,10 @@ namespace ImageEncryptTCP.Manager
                     while (!cancellationToken.IsCancellationRequested)
                     {
                         Instance.SendData(client);
-                    }
-
-                    client.Shutdown(SocketShutdown.Both);
+                        Instance.ReceiveAndProcessData(client);
+					}
                 }
+
             }
             catch (Exception e)
             {
@@ -89,23 +91,28 @@ namespace ImageEncryptTCP.Manager
 
         private void SendData(Socket client)
         {
-            if (!string.IsNullOrEmpty(Instance.ImagePath))
+            while (IsActive)
             {
-                byte[] img = File.ReadAllBytes(Instance.ImagePath);
-                byte[] keyb = Encoding.ASCII.GetBytes(Instance.EncryptKey!);
 
-                var encryptedImg = EncryptionManager.EncryptImage(Instance.ImagePath);
-                List<char> imgb = encryptedImg.Select(i => (char)i).ToList();
-                byte[] imgEb = Encoding.ASCII.GetBytes(imgb.ToArray());
 
-                byte[] combinedData = new byte[sizeof(int) + imgEb.Length + keyb.Length];
-                BitConverter.GetBytes(imgEb.Length).CopyTo(combinedData, 0);
-                imgEb.CopyTo(combinedData, sizeof(int));
-                keyb.CopyTo(combinedData, sizeof(int) + imgEb.Length);
-                client.Send(combinedData);
+                if (!string.IsNullOrEmpty(Instance.ImagePath))
+                {
+                    byte[] img = File.ReadAllBytes(Instance.ImagePath);
+                    byte[] keyb = Encoding.ASCII.GetBytes(Instance.EncryptKey!);
 
-                Console.WriteLine("Datos enviados");
-                IsActive = false;
+                    var encryptedImg = EncryptionManager.EncryptImage(Instance.ImagePath);
+                    List<char> imgb = encryptedImg.Select(i => (char)i).ToList();
+                    byte[] imgEb = Encoding.ASCII.GetBytes(imgb.ToArray());
+
+                    byte[] combinedData = new byte[sizeof(int) + imgEb.Length + keyb.Length];
+                    BitConverter.GetBytes(imgEb.Length).CopyTo(combinedData, 0);
+                    imgEb.CopyTo(combinedData, sizeof(int));
+                    keyb.CopyTo(combinedData, sizeof(int) + imgEb.Length);
+                    client.Send(combinedData);
+
+                    Console.WriteLine("Datos enviados");
+                    IsActive = false;
+                }
             }
         }
 

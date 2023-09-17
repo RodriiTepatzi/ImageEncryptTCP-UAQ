@@ -68,7 +68,7 @@ namespace ImageEncryptTCP.ViewModel
         {
             if (!string.IsNullOrEmpty(Key) && !string.IsNullOrEmpty(Filepath))
             {
-				ConnectionManager.Instance.ImagePath = Filepath;
+                ConnectionManager.Instance.ImagePath = Filepath;
                 ConnectionManager.Instance.EncryptKey = Key;
 			}
 		}

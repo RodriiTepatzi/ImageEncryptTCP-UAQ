@@ -11,6 +11,8 @@
         <Button Content="Enviar" HorizontalAlignment="Left" Margin="10,51,0,0" VerticalAlignment="Top" Style="{StaticResource ButtonStyleApp}" Height="26" Width="105" Command="{Binding SendData}"/>
         <Label HorizontalAlignment="Left" Margin="130,10,0,0" VerticalAlignment="Top" Foreground="{DynamicResource PrimaryColor}" Content="{Binding Filepath, UpdateSourceTrigger=PropertyChanged}"/>
         <TextBox Style="{DynamicResource TextBoxStyleApp}" Text="{Binding Key, UpdateSourceTrigger=PropertyChanged}" x:Name="ipTextBox" Margin="132,49,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="230" Height="30" FontSize="14" VerticalContentAlignment="Center" Background="#FF454545" BorderBrush="{x:Null}" Foreground="#FF45A422" SelectionBrush="#FF45A422" BorderThickness="0,0,0,0" MaxLength="15"/>
+        <Image HorizontalAlignment="Left" Height="180" Margin="115,172,0,0" VerticalAlignment="Top" Width="178" Source="{Binding Filepath, UpdateSourceTrigger=PropertyChanged}"/>
+        <Image HorizontalAlignment="Left" Height="180" Margin="484,172,0,0" VerticalAlignment="Top" Width="178" Source="{Binding Filepath, UpdateSourceTrigger=PropertyChanged}"/>
 
     </Grid>
 </Window>
