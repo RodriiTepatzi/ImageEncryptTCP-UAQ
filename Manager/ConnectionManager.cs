@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.IO;
 using ImageEncryptTCP.Events;
 using System.Threading;
+using System.Security.Cryptography.Xml;
 
 namespace ImageEncryptTCP.Manager
 {
@@ -20,16 +21,20 @@ namespace ImageEncryptTCP.Manager
         public string? ImagePath { get; set; }
         public string? EncryptKey { get; set; }
         public bool IsActive { get; set; }
+        public bool DataReceived { get; set; }
 
         public event EventHandler<ConnectionChangedEventArgs>? ConnectionChanged;
         public event EventHandler<ConnectionTimedOutEventArgs>? ConnectionTimedOut;
+        public event EventHandler<MessageChangedEventArgs>? MessageChanged;
+        public event EventHandler<PathChangedEventArgs>? PathChanged;
 
-        private CancellationTokenSource cancellationTokenSource;
+	    private CancellationTokenSource cancellationTokenSource;
 
         private ConnectionManager()
         {
             IsActive = true;
-        }
+            DataReceived = false;
+		}
 
         public void StartClient()
         {
@@ -44,9 +49,9 @@ namespace ImageEncryptTCP.Manager
 
             cancellationTokenSource = new CancellationTokenSource();
             Task.Run(() => StartClientAsync(cancellationTokenSource.Token));
-			HandleConnectionStatusChange(true);
-			HandleTimedOutStatusChange(true);
-		}
+            HandleConnectionStatusChange(true);
+            HandleTimedOutStatusChange(true);
+        }
 
         public void StopClient()
         {
@@ -79,7 +84,7 @@ namespace ImageEncryptTCP.Manager
                     {
                         Instance.SendData(client);
                         Instance.ReceiveAndProcessData(client);
-					}
+                    }
                 }
 
             }
@@ -93,88 +98,101 @@ namespace ImageEncryptTCP.Manager
         {
             while (IsActive)
             {
-
-
                 if (!string.IsNullOrEmpty(Instance.ImagePath))
                 {
                     byte[] img = File.ReadAllBytes(Instance.ImagePath);
                     byte[] keyb = Encoding.ASCII.GetBytes(Instance.EncryptKey!);
 
-                    var encryptedImg = EncryptionManager.EncryptImage(Instance.ImagePath);
-                    List<char> imgb = encryptedImg.Select(i => (char)i).ToList();
-                    byte[] imgEb = Encoding.ASCII.GetBytes(imgb.ToArray());
-
-                    byte[] combinedData = new byte[sizeof(int) + imgEb.Length + keyb.Length];
-                    BitConverter.GetBytes(imgEb.Length).CopyTo(combinedData, 0);
-                    imgEb.CopyTo(combinedData, sizeof(int));
-                    keyb.CopyTo(combinedData, sizeof(int) + imgEb.Length);
-                    client.Send(combinedData);
+                    var encryptedImg = EncryptionManager.EncryptImage(Instance.ImagePath, Instance.EncryptKey!);
 
                     Console.WriteLine("Datos enviados");
+
+                    string encryptionKey = Instance.EncryptKey!;
+                    byte[] keyBytes = Encoding.ASCII.GetBytes(encryptionKey);
+
+                    RC4 rc4 = new RC4(keyBytes);
+
+                    byte[] dataToEncrypt = File.ReadAllBytes(Instance.ImagePath);
+
+                    byte[] encryptedData = rc4.Encrypt(dataToEncrypt);
+
+                    byte[] combinedData = new byte[sizeof(int) + encryptedData.Length + keyBytes.Length];
+                    BitConverter.GetBytes(encryptedData.Length).CopyTo(combinedData, 0);
+                    encryptedData.CopyTo(combinedData, sizeof(int));
+                    keyBytes.CopyTo(combinedData, sizeof(int) + encryptedData.Length);
+
+
+                    client.Send(combinedData);
+
                     IsActive = false;
                 }
             }
         }
 
-        private void OnConnectionChanged(ConnectionChangedEventArgs e)
-        {
-            ConnectionChanged?.Invoke(this, e);
-        }
-
-        private void OnTimedOutChanged(ConnectionTimedOutEventArgs e)
-        {
-            ConnectionTimedOut?.Invoke(this, e);
-        }
-
-        private void HandleConnectionStatusChange(bool isConnected) => OnConnectionChanged(new ConnectionChangedEventArgs(isConnected));
-        private void HandleTimedOutStatusChange(bool isTimedOut) => OnTimedOutChanged(new ConnectionTimedOutEventArgs(isTimedOut));
-
 
         private void ReceiveAndProcessData(Socket client)
         {
-            // Tamaño del buffer para recibir datos del servidor
-            int bufferSize = 8192;
-            byte[] buffer = new byte[bufferSize];
-            int bytesRead = client.Receive(buffer);
-
-            // Verifica si la conexión se cerró por el servidor
-            if (bytesRead == 0)
+            if (!DataReceived)
             {
-                // La conexión se cerró, puedes manejarlo aquí.
-                // Puedes invocar un evento o realizar alguna acción específica.
-                HandleConnectionStatusChange(false);
-                return;
-            }
+                int bufferSize = 8192;
+                byte[] buffer = new byte[bufferSize];
+                int bytesRead = client.Receive(buffer);
 
-            // Obtén el tamaño de la imagen desencriptada que se va a recibir
-            int decryptedImageSize = BitConverter.ToInt32(buffer, 0);
-
-            // Lee los datos de la imagen desencriptada del servidor
-            using (MemoryStream msDecryptedImage = new MemoryStream())
-            {
-                int totalBytesRead = 0;
-                while (totalBytesRead < decryptedImageSize)
+                if (bytesRead == 0)
                 {
-                    int bytesToRead = Math.Min(bufferSize, decryptedImageSize - totalBytesRead);
-                    msDecryptedImage.Write(buffer, sizeof(int), bytesToRead);
-                    totalBytesRead += bytesToRead;
-
-                    if (totalBytesRead < decryptedImageSize)
-                    {
-                        // Lee más datos del servidor si es necesario
-                        bytesRead = client.Receive(buffer);
-                    }
+                    HandleConnectionStatusChange(false);
+                    return;
                 }
 
-                // Obtén la imagen desencriptada en forma de bytes
-                byte[] decryptedImageBytes = msDecryptedImage.ToArray();
+				byte[] img = File.ReadAllBytes(Instance.ImagePath!);
+				byte[] bufferFit = new byte[bytesRead];
 
-                // Aquí puedes hacer lo que necesites con la imagen desencriptada
-                // Por ejemplo, puedes guardarla en un archivo, mostrarla en una ventana, etc.
-                File.WriteAllBytes("imagen_desencriptada.jpg", decryptedImageBytes);
+                for(int i = 0; i < bytesRead; i++)
+                    bufferFit[i] = buffer[i];
 
-                Console.WriteLine("Imagen desencriptada recibida del servidor y guardada como imagen_desencriptada.jpg.");
-            }
-        }
-    }
+				if (AreArraysEqual(img, bufferFit))
+				{
+					File.WriteAllBytes("desencriptada_cliente.jpg", buffer);
+                    HandlePathChanged($"{ Directory.GetCurrentDirectory()}/desencriptada_cliente.jpg");
+                    HandleMessageChanged("Las imagenes son iguales");
+				}
+                else
+                {
+					HandleMessageChanged("Las imagenes no son iguales");
+				}
+
+				DataReceived = true;
+			}
+		}
+
+
+		bool AreArraysEqual(byte[] array1, byte[] array2)
+		{
+			if (ReferenceEquals(array1, array2))
+				return true;
+
+			if (array1 == null || array2 == null)
+				return false;
+            
+			if (array1.Length != array2.Length)
+				return false;
+
+			for (int i = 0; i < array1.Length; i++)
+			    if (array1[i] != array2[i])
+					return false;
+			
+
+			return true;
+		}
+
+		private void OnConnectionChanged(ConnectionChangedEventArgs e) => ConnectionChanged?.Invoke(this, e);
+		private void OnTimedOutChanged(ConnectionTimedOutEventArgs e) => ConnectionTimedOut?.Invoke(this, e);
+        private void OnMessageChanged(MessageChangedEventArgs e) => MessageChanged?.Invoke(this, e);
+        private void OnPathChanged(PathChangedEventArgs e) => PathChanged?.Invoke(this, e);
+		private void HandleConnectionStatusChange(bool isConnected) => OnConnectionChanged(new ConnectionChangedEventArgs(isConnected));
+		private void HandleTimedOutStatusChange(bool isTimedOut) => OnTimedOutChanged(new ConnectionTimedOutEventArgs(isTimedOut));
+        private void HandleMessageChanged(string message) => OnMessageChanged(new MessageChangedEventArgs(message));
+        private void HandlePathChanged(string path) => OnPathChanged(new PathChangedEventArgs(path));
+
+	}
 }

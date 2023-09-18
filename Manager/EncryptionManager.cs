@@ -9,9 +9,9 @@ namespace ImageEncryptTCP.Manager
 {
     public class EncryptionManager
     {
-        public static List<int> EncryptImage(string path)
+        public static List<int> EncryptImage(string path, string keyY)
         {
-            byte[] key = Encoding.ASCII.GetBytes("2k");
+            byte[] key = Encoding.ASCII.GetBytes(keyY);
             byte[] image = File.ReadAllBytes(path);
 
             List<int> EncrypMessage = RC4(image, key);
@@ -23,7 +23,6 @@ namespace ImageEncryptTCP.Manager
 
         static List<int> KSA(byte[] key)
         {
-
             //Llenamos K con la key
             //Si no cabe la repetimos
             List<int> K = new List<int>();
@@ -109,5 +108,6 @@ namespace ImageEncryptTCP.Manager
 
             return EncrypMessage;
         }
+
     }
 }
